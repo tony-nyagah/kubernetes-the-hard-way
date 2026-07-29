@@ -1,8 +1,10 @@
-# The Four Machines
+# Prerequisites
 
-To setup the needed virtual machines, I will use Vagrant with the libvirt provider (works well on Fedora with KVM).
+In this lab you will review the machine requirements necessary to follow this tutorial.
 
-The `Vagrantfile` in this repo sets up the four needed VMs.
+## Virtual or Physical Machines
+
+This tutorial requires four (4) virtual or physical ARM64 or AMD64 machines running Debian 12 (bookworm). The following table lists the four machines and their CPU, memory, and storage requirements.
 
 | Name    | Description            | CPU | RAM   | Storage |
 |---------|------------------------|-----|-------|---------|
@@ -11,67 +13,13 @@ The `Vagrantfile` in this repo sets up the four needed VMs.
 | node-0  | Kubernetes worker node | 1   | 2GB   | 20GB    |
 | node-1  | Kubernetes worker node | 1   | 2GB   | 20GB    |
 
-## Install Vagrant and the libvirt provider
+How you provision the machines is up to you, the only requirement is that each machine meet the above system requirements including the machine specs and OS version. Once you have all four machines provisioned, verify the OS requirements by viewing the `/etc/os-release` file:
 
 ```bash
-sudo dnf install -y vagrant vagrant-libvirt libvirt libvirt-devel \
-    gcc make ruby-devel qemu-kvm
-sudo systemctl enable --now libvirtd
-sudo usermod -aG libvirt $(whoami)
-newgrp libvirt
-```
-
-If the plugin isn't bundled, install it explicitly:
-
-```bash
-vagrant plugin install vagrant-libvirt
-```
-
-Verify it's installed:
-
-```bash
-vagrant plugin list
-```
-
-## Network
-
-Each VM gets a static IP on a dedicated `kthw` libvirt network (defined in the `Vagrantfile`), so machines can reach each other by address without depending on DHCP:
-
-| Name    | IP             |
-|---------|----------------|
-| jumpbox | 192.168.56.10  |
-| server  | 192.168.56.11  |
-| node-0  | 192.168.56.12  |
-| node-1  | 192.168.56.13  |
-
-> Note: an explicit subnet is required for `private_network` — omitting it causes a `to_range` crash in vagrant-libvirt when it tries to auto-derive a DHCP range.
-
-## SSH access
-
-The `Vagrantfile` provisions a dedicated SSH keypair (generated once into `.kthw-keys/`) so `jumpbox` can SSH into `server`, `node-0`, and `node-1` without a password, matching the access pattern this tutorial expects.
-
-## Start the VMs
-
-```bash
-vagrant up --provider=libvirt
-```
-
-Check status:
-
-```bash
-vagrant status
-```
-
-## Verify
-
-SSH into any machine and confirm the OS version matches the tutorial's requirement:
-
-```bash
-vagrant ssh jumpbox
 cat /etc/os-release
 ```
 
-Expected output:
+You should see something similar to the following output:
 
 ```text
 PRETTY_NAME="Debian GNU/Linux 12 (bookworm)"
@@ -82,10 +30,19 @@ VERSION_CODENAME=bookworm
 ID=debian
 ```
 
-## Useful commands
+## My solution
 
+Use Vagrant to provision the machines. Install `vagrant`, add the `vagrant-libvirt` and `vagrant-disksize` plugin, and use the `Vagrantfile` to define the machines.
+
+Install the vagrant-libvirt and vagrant-disksize plugins:
 ```bash
-vagrant halt          # stop all VMs
-vagrant destroy -f    # tear everything down
-vagrant reload        # apply Vagrantfile changes
+vagrant plugin install vagrant-libvirt
+vagrant plugin install vagrant-disksize
 ```
+
+Start the Vagrant machines:
+```bash
+vagrant up --provider=libvirt
+```
+
+Next: [setting-up-the-jumpbox](02-jumpbox.md)
